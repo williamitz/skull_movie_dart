@@ -15,6 +15,10 @@ class MovieProvider extends ChangeNotifier {
   int _page = 1;
   int _popularPage = 1;
 
+  int _movieId = 0;
+
+  List<Cast> _credit = [];
+
   List<Movie> _nowMovies = [];
   List<Movie> _popularMovies = [];
 
@@ -37,12 +41,20 @@ class MovieProvider extends ChangeNotifier {
     return _popularMovies;
   }
 
+  List<Cast> get castMovie {
+    return _credit;
+  }
+
   int get counterNow {
     return _nowMovies.length;
   }
 
   int get counterPopular {
     return _popularMovies.length;
+  }
+
+  int get counterCast {
+    return _credit.length;
   }
 
   Future<String> _resolveHttp(String endpoint, int page) async {
@@ -54,12 +66,7 @@ class MovieProvider extends ChangeNotifier {
   }
 
   getNowMovies() async {
-    // final url = Uri.https(_urlBase, '3/movie/now_playing',
-    //     {'api_key': _apiKey, 'page': _page.toString(), 'language': _language});
-
-    // final response = await http.get(url);
-
-    final body = await _resolveHttp( '3/movie/now_playing', _page );
+    final body = await _resolveHttp('3/movie/now_playing', _page);
 
     _page++;
     final movieResponse = MovieResponse.fromJson(body);
@@ -69,16 +76,11 @@ class MovieProvider extends ChangeNotifier {
   }
 
   getPopularMovies() async {
-    // final url = Uri.https(_urlBase, '3/movie/popular',
-    //     {'api_key': _apiKey, 'page': _page.toString(), 'language': _language});
-
-    // final response = await http.get(url);
-
-    final body = await _resolveHttp( '3/movie/popular', _popularPage );
+    final body = await _resolveHttp('3/movie/popular', _popularPage);
 
     _popularPage++;
     final popularResponse = PopularResponse.fromJson(body);
-    
+
     _popularMovies = [..._popularMovies, ...popularResponse.results];
 
     // if (response.statusCode == 200) {
@@ -87,5 +89,20 @@ class MovieProvider extends ChangeNotifier {
     // }
 
     notifyListeners();
+  }
+
+  Future<List<Cast>> getCreditMovie(int movieId) async {
+    if (_movieId == movieId) return [..._credit];
+
+    print('get casting');
+    _movieId = movieId;
+
+    final body = await _resolveHttp('3/movie/$_movieId/credits', 1);
+
+    final creditResponse = CreditResponse.fromJson(body);
+
+    _credit = [...creditResponse.cast];
+
+    return creditResponse.cast;
   }
 }

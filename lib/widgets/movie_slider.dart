@@ -1,14 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:skull_movie/models/models.dart';
-import 'package:skull_movie/providers/movie_provider.dart';
 
-class MovieSlider extends StatelessWidget {
-  const MovieSlider({Key? key}) : super(key: key);
+/// Nota: trabajar los scrollview con statefullwiget
+class MovieSlider extends StatefulWidget {
+  final List<Movie> movies;
+  final Function onMoreMovies;
+
+  const MovieSlider(
+      {Key? key, required this.movies, required this.onMoreMovies})
+      : super(key: key);
+
+  @override
+  State<MovieSlider> createState() => _MovieSliderState();
+}
+
+class _MovieSliderState extends State<MovieSlider> {
+  bool loading = false;
+
+  final ScrollController scrollCtrl = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    scrollCtrl.addListener(() {
+      double current = scrollCtrl.position.pixels;
+      double last = scrollCtrl.position.maxScrollExtent - 250;
+
+      if (current >= last && !loading) {
+        setState(() {
+          loading = true;
+        });
+
+        widget.onMoreMovies();
+
+        setState(() {
+          loading = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final movieProvider = Provider.of<MovieProvider>(context, listen: true);
+    // final movieProvider = Provider.of<MovieProvider>(context, listen: true);
 
     return SizedBox(
       width: double.infinity,
@@ -24,11 +65,16 @@ class MovieSlider extends StatelessWidget {
               )),
           Expanded(
             child: ListView.builder(
+              controller: scrollCtrl,
               scrollDirection: Axis.horizontal,
-              itemCount: movieProvider.counterPopular,
+              itemCount: widget.movies.length,
               itemBuilder: (_, int i) {
-                final movie = movieProvider.popularMovies[i];
-                return _MoviePoster( movie: movie, );
+                Movie movie = widget.movies[i];
+                movie.heroId = '${movie.id}-slider-$i';
+                
+                return _MoviePoster(
+                  movie: movie,
+                );
               },
             ),
           ),
@@ -42,11 +88,14 @@ class _MoviePoster extends StatelessWidget {
   final Movie movie;
 
   const _MoviePoster({
-    Key? key, required this.movie,
+    Key? key,
+    required this.movie,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    
+
     return Container(
       width: 130,
       height: 200,
@@ -54,20 +103,20 @@ class _MoviePoster extends StatelessWidget {
       child: Column(
         children: [
           GestureDetector(
-            onTap: (() => Navigator.pushNamed(context, 'detail',
-                arguments: 'movie-instance')),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20.0),
-              child: FadeInImage(
-                placeholder: const AssetImage('assets/loading.gif'),
-                image: NetworkImage(
-                  movie.posterPath != null ?
-                  movie.fullPoster
-                  : 'https://via.placeholder.com/300x400'
+            onTap: () {
+              Navigator.pushNamed(context, 'detail', arguments: movie);
+            },
+            child: Hero(
+              tag: movie.heroId! ,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20.0),
+                child: FadeInImage(
+                  placeholder: const AssetImage('assets/loading.gif'),
+                  image: NetworkImage(movie.fullPoster),
+                  width: 130,
+                  height: 190,
+                  fit: BoxFit.cover,
                 ),
-                width: 130,
-                height: 190,
-                fit: BoxFit.cover,
               ),
             ),
           ),

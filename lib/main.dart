@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:skull_movie/providers/movie_provider.dart';
 import 'package:skull_movie/screens/screens.dart';
 import 'package:skull_movie/themes/ligth_theme.dart';
 
@@ -9,16 +11,28 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Material App',
-      
-      initialRoute: '',
-      routes: {
-        '':(context) => const HomeScreen(),
-        'detail':(context) => const DetiailScreen(),
-      },
-      theme: LigthTheme.theme,
+    return MultiProvider(
+
+      providers: [
+
+        ChangeNotifierProvider(
+          create: (_) => MovieProvider(),
+          lazy: true,
+        )
+
+      ],
+
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Material App',
+        
+        initialRoute: '',
+        routes: {
+          '':(context) => const HomeScreen(),
+          'detail':(context) => const DetiailScreen(),
+        },
+        theme: LigthTheme.theme,
+      ),
     );
   }
 }

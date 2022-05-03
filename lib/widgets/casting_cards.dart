@@ -1,29 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:skull_movie/models/models.dart';
+import 'package:skull_movie/providers/movie_provider.dart';
 
 class CastingCards extends StatelessWidget {
-  const CastingCards({Key? key}) : super(key: key);
+  final int movieId;
+
+  const CastingCards({Key? key, required this.movieId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final movieProv = Provider.of<MovieProvider>(context, listen: false);
+
+    return SizedBox(
       width: double.infinity,
       height: 200,
-      color: Colors.black26,
+      // color: Colors.black26,
+      child: FutureBuilder(
+        future: movieProv.getCreditMovie(movieId),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
 
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 10,
-        itemBuilder: (BuildContext context, int index) => const _CastingPoster(),
+            return Row(
+              children: [
+                Expanded(child: Container()),
+                const CircularProgressIndicator(),
+                Expanded(child: Container()),
+              ],
+            );
+
+          }
+
+          return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: movieProv.counterCast,
+              itemBuilder: (BuildContext context, int i) {
+                final cast = movieProv.castMovie[i];
+
+                return _CastingPoster(cast: cast);
+              });
+        },
       ),
-
     );
   }
 }
 
-
 class _CastingPoster extends StatelessWidget {
+  final Cast cast;
+
   const _CastingPoster({
     Key? key,
+    required this.cast,
   }) : super(key: key);
 
   @override
@@ -35,20 +62,20 @@ class _CastingPoster extends StatelessWidget {
       child: Column(
         children: [
           ClipRRect(
-              borderRadius: BorderRadius.circular(20.0),
-              child: const FadeInImage(
-                placeholder: AssetImage('assets/loading.gif'),
-                image: NetworkImage('https://via.placeholder.com/300x400'),
-                width: 100,
-                height: 150,
-                fit: BoxFit.cover,
-              ),
+            borderRadius: BorderRadius.circular(20.0),
+            child: FadeInImage(
+              placeholder: const AssetImage('assets/loading.gif'),
+              image: NetworkImage(cast.fullProfilePath),
+              width: 100,
+              height: 150,
+              fit: BoxFit.cover,
             ),
+          ),
           const SizedBox(
             height: 5.0,
           ),
-          const Text(
-            'El señor de los anillos',
+          Text(
+            cast.name,
             overflow: TextOverflow.ellipsis,
             maxLines: 2,
             textAlign: TextAlign.center,

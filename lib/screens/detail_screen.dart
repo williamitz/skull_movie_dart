@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skull_movie/models/models.dart';
 import 'package:skull_movie/widgets/widgets.dart';
 
 class DetiailScreen extends StatelessWidget {
@@ -6,24 +7,28 @@ class DetiailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //TODO: cambiar cuando tengamos la clase
-    final String movie =
-        ModalRoute.of(context)?.settings.arguments.toString() ?? 'no-movie';
+    final Movie movie = ModalRoute.of(context)!.settings.arguments as Movie;
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          _DetailAppbar(title: movie),
+          _DetailAppbar(
+            title: movie.title,
+            backdropPath: movie.fullBackdrop,
+          ),
           SliverList(
               delegate: SliverChildListDelegate([
-
-                const _PosterAndTitle(),
-                const _Overview(),
-
-                const CastingCards()
-
-              ])
-          )
+            _PosterAndTitle(
+              posterPath: movie.fullPoster,
+              subtitle: movie.originalTitle,
+              title: movie.title,
+              voteaverage: movie.voteAverage,
+              date: movie.releaseDate!,
+              heroId: movie.heroId!,
+            ),
+            _Overview(overview: movie.overview),
+            CastingCards(movieId: movie.id,  )
+          ]))
         ],
       ),
     );
@@ -31,16 +36,19 @@ class DetiailScreen extends StatelessWidget {
 }
 
 class _Overview extends StatelessWidget {
+  final String overview;
+
   const _Overview({
     Key? key,
+    required this.overview,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child:  Text(
-        'Ex mollit aliquip ipsum veniam tempor fugiat exercitation officia consectetur magna ea incididunt. Minim do minim dolore duis reprehenderit ipsum proident. Pariatur ex anim consectetur aliqua. Pariatur laboris excepteur laborum reprehenderit eu consectetur aliquip qui eu fugiat. Duis enim cupidatat sint occaecat exercitation et excepteur magna enim occaecat deserunt. Fugiat sunt minim proident in reprehenderit. Adipisicing fugiat occaecat culpa commodo eu pariatur do laborum dolore cillum dolor veniam.',
+      child: Text(
+        overview,
         style: Theme.of(context).textTheme.subtitle1,
         textAlign: TextAlign.justify,
       ),
@@ -49,62 +57,87 @@ class _Overview extends StatelessWidget {
 }
 
 class _PosterAndTitle extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String posterPath;
+  final String date;
+  final double voteaverage;
+  final String heroId;
+
   const _PosterAndTitle({
     Key? key,
+    required this.title,
+    required this.subtitle,
+    required this.posterPath,
+    required this.voteaverage,
+    required this.date, 
+    required this.heroId,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final _textTheme = Theme.of(context).textTheme;
+    final size = MediaQuery.of(context).size;
 
     return Container(
         margin: const EdgeInsets.only(top: 10),
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20.0),
-              child: const FadeInImage(
-                placeholder: AssetImage('assets/loading.gif'),
-                image: NetworkImage('https://via.placeholder.com/200x300'),
-                fit: BoxFit.cover,
-                height: 150,
+            Hero(
+              tag: heroId,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20.0),
+                child: FadeInImage(
+                  placeholder: const AssetImage('assets/loading.gif'),
+                  image: NetworkImage(posterPath),
+                  fit: BoxFit.cover,
+                  height: 150,
+                ),
               ),
             ),
             const SizedBox(
               width: 20,
             ),
-            Column(
-              children: [
-                Text(
-                  'El señor de los anillos',
-                  style: _textTheme.headline5,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-                Text(
-                  'Título original',
-                  style: _textTheme.subtitle1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Row(
-                  children: [
-                    const Icon(Icons.star_outline),
-                    const SizedBox(width: 10),
-                    Text(
-                      'movie.voteaverage',
-                      style: _textTheme.caption,
-                    )
-                  ],
-                ),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_month_outlined),
-                    const SizedBox(width: 10),
-                    Text('23 may', style: _textTheme.caption)
-                  ],
-                ),
-              ],
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: size.width - 150),
+              child: Column(
+                // mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: _textTheme.headline5,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                  Text(
+                    subtitle,
+                    style: _textTheme.subtitle1,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.star_outline),
+                      const SizedBox(width: 10),
+                      Text(
+                        '$voteaverage',
+                        style: _textTheme.caption,
+                      )
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.calendar_month_outlined),
+                      const SizedBox(width: 10),
+                      Text(date, style: _textTheme.caption)
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ));
@@ -113,10 +146,12 @@ class _PosterAndTitle extends StatelessWidget {
 
 class _DetailAppbar extends StatelessWidget {
   final String title;
+  final String backdropPath;
 
   const _DetailAppbar({
     Key? key,
     required this.title,
+    required this.backdropPath,
   }) : super(key: key);
 
   @override
@@ -139,9 +174,9 @@ class _DetailAppbar extends StatelessWidget {
           alignment: Alignment.bottomCenter,
           decoration: const BoxDecoration(color: Colors.black12),
         ),
-        background: const FadeInImage(
-          placeholder: AssetImage('assets/loading.gif'),
-          image: NetworkImage('https://via.placeholder.com/500x300'),
+        background: FadeInImage(
+          placeholder: const AssetImage('assets/loading.gif'),
+          image: NetworkImage(backdropPath),
           fit: BoxFit.cover,
         ),
       ),
