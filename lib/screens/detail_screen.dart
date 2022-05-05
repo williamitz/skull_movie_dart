@@ -23,7 +23,7 @@ class DetiailScreen extends StatelessWidget {
               subtitle: movie.originalTitle,
               title: movie.title,
               voteaverage: movie.voteAverage,
-              date: movie.releaseDate!,
+              date: movie.releaseDate ?? '',
               heroId: movie.heroId!,
             ),
             _Overview(overview: movie.overview),

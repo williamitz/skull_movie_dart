@@ -42,7 +42,7 @@ class Movie {
   }
 
   String get fullBackdrop {
-    return posterPath == null
+    return backdropPath == null
         ? 'https://i.stack.imgur.com/GNhxO.png'
         : 'https://image.tmdb.org/t/p/w500/$backdropPath';
   }
